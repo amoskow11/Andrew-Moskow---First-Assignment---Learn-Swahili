@@ -3,64 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Swahili Sprint</title>
+  <title>Learn Swahili 🌍</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <h1>Swahili Sprint</h1>
-      <p class="subtitle">A playful beginner Swahili practice app</p>
-    </header>
 
-    <section class="stats">
-      <div class="stat-card">
-        <span class="label">Score</span>
-        <span id="score">0</span>
-      </div>
-      <div class="stat-card">
-        <span class="label">Streak</span>
-        <span id="streak">0</span>
-      </div>
-      <div class="stat-card">
-        <span class="label">Session XP</span>
-        <span id="sessionXP">0</span>
-      </div>
-      <div class="stat-card">
-        <span class="label">Total XP</span>
-        <span id="totalXP">0</span>
-      </div>
-      <div class="stat-card">
-        <span class="label">Lessons Completed</span>
-        <span id="lessonsCompleted">0</span>
-      </div>
-    </section>
+  <header>
+    <h1>🌍 Learn Swahili</h1>
+    <div id="stats-bar">
+      <span id="stat-score">Score: 0</span>
+      <span id="stat-streak">🔥 Streak: 0</span>
+      <span id="stat-xp">⭐ XP: 0</span>
+      <span id="stat-total-xp">💾 Total XP: 0</span>
+      <span id="stat-lessons">📚 Lessons: 0</span>
+    </div>
+  </header>
 
-    <main class="quiz-container" id="quizContainer">
-      <div class="question-meta">
-        <span id="questionCount">Question 1 of 10</span>
-        <span id="roundType" class="round-type">Classic Round</span>
+  <main>
+    <div id="quiz-container">
+
+      <div id="progress-bar-wrapper">
+        <div id="progress-bar"></div>
       </div>
 
-      <h2 id="questionText">Loading question...</h2>
+      <p id="question-counter">Question 1 of 10</p>
 
-      <div id="choicesContainer" class="choices"></div>
+      <div id="question-card">
+        <p id="question-prompt"></p>
+        <div id="choices-container"></div>
+        <div id="type-answer-container" class="hidden">
+          <input type="text" id="type-input" placeholder="Type your answer here..." autocomplete="off" />
+          <button id="submit-btn">Submit</button>
+        </div>
+      </div>
 
-      <div id="feedback" class="feedback"></div>
+      <div id="feedback-box" class="hidden">
+        <p id="feedback-text"></p>
+        <button id="next-btn">Next →</button>
+      </div>
 
-      <button id="nextBtn" class="next-btn hidden">Next Question</button>
-    </main>
+    </div>
 
-    <section id="resultsScreen" class="results hidden">
-      <h2>Session Complete 🎉</h2>
-      <p id="finalScore"></p>
-      <p id="finalLongestStreak"></p>
-      <p id="finalSessionXP"></p>
-      <p id="finalTotalXP"></p>
-      <p id="finalLessonsCompleted"></p>
-      <button id="restartBtn">Play Again</button>
-    </section>
-  </div>
+    <div id="results-screen" class="hidden">
+      <h2>🎉 Session Complete!</h2>
+      <p id="results-score"></p>
+      <p id="results-xp"></p>
+      <p id="results-streak"></p>
+      <p id="results-total-xp"></p>
+      <p id="results-lessons"></p>
+      <button id="play-again-btn">Play Again 🔄</button>
+    </div>
+  </main>
 
   <script src="script.js"></script>
 </body>
