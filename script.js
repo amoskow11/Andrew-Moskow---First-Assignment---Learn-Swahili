@@ -1,373 +1,250 @@
-const baseQuestions = [
-  {
-    id: 1,
-    type: "classic",
-    question: 'What is the Swahili word for "hello"?',
-    choices: ["jambo", "maji", "rafiki", "hapana"],
-    answer: "jambo",
-    hint: "It is a common greeting."
-  },
-  {
-    id: 2,
-    type: "classic",
-    question: 'What does "asante" mean in English?',
-    choices: ["please", "thank you", "friend", "yes"],
-    answer: "thank you",
-    hint: "You say this when someone helps you."
-  },
-  {
-    id: 3,
-    type: "fast",
-    question: 'What is the Swahili word for "water"?',
-    choices: ["chakula", "maji", "karibu", "kwaheri"],
-    answer: "maji",
-    hint: "You drink it."
-  },
-  {
-    id: 4,
-    type: "fast",
-    question: 'What does "ndiyo" mean in English?',
-    choices: ["no", "food", "yes", "hello"],
-    answer: "yes",
-    hint: "It is the positive answer."
-  },
-  {
-    id: 5,
-    type: "streak",
-    question: 'What is the Swahili word for "no"?',
-    choices: ["hapana", "jambo", "tafadhali", "maji"],
-    answer: "hapana",
-    hint: "It is the opposite of yes."
-  },
-  {
-    id: 6,
-    type: "streak",
-    question: 'What does "rafiki" mean in English?',
-    choices: ["friend", "welcome", "food", "goodbye"],
-    answer: "friend",
-    hint: "A person you enjoy spending time with."
-  },
-  {
-    id: 7,
-    type: "classic",
-    question: 'What is the Swahili word for "goodbye"?',
-    choices: ["kwaheri", "asante", "ndiyo", "rafiki"],
-    answer: "kwaheri",
-    hint: "You say this when leaving."
-  },
-  {
-    id: 8,
-    type: "classic",
-    question: 'What does "chakula" mean in English?',
-    choices: ["food", "water", "please", "hello"],
-    answer: "food",
-    hint: "You eat it."
-  },
-  {
-    id: 9,
-    type: "classic",
-    question: 'What is the Swahili word for "please"?',
-    choices: ["karibu", "tafadhali", "hapana", "jambo"],
-    answer: "tafadhali",
-    hint: "A polite word used when asking."
-  },
-  {
-    id: 10,
-    type: "classic",
-    question: 'What does "karibu" mean in English?',
-    choices: ["thank you", "welcome", "friend", "yes"],
-    answer: "welcome",
-    hint: "You might say this when greeting someone into a place."
-  }
+// ─────────────────────────────────────────────
+//  Learn Swahili — script.js
+// ─────────────────────────────────────────────
+
+// ── Question Bank ──
+const ALL_QUESTIONS = [
+  { prompt: 'How do you say "hello" in Swahili?',      answer: "jambo",     type: "mc" },
+  { prompt: 'What does "asante" mean in English?',      answer: "thank you", type: "mc" },
+  { prompt: 'How do you say "water" in Swahili?',       answer: "maji",      type: "mc" },
+  { prompt: 'What does "ndiyo" mean in English?',       answer: "yes",       type: "mc" },
+  { prompt: 'How do you say "no" in Swahili?',          answer: "hapana",    type: "mc" },
+  { prompt: 'What does "rafiki" mean in English?',      answer: "friend",    type: "mc" },
+  { prompt: 'How do you say "goodbye" in Swahili?',     answer: "kwaheri",   type: "type" },
+  { prompt: 'What does "chakula" mean in English?',     answer: "food",      type: "type" },
+  { prompt: 'How do you say "please" in Swahili?',      answer: "tafadhali", type: "type" },
+  { prompt: 'What does "karibu" mean in English?',      answer: "welcome",   type: "mc" },
 ];
 
-const modeLabels = {
-  classic: "🌟 Classic Round",
-  streak: "🔥 Streak Round",
-  fast: "⚡ Fast Round",
-  review: "🧠 Review Round"
-};
+// ── Distractors pool for multiple choice ──
+const DISTRACTORS = [
+  "jambo", "asante", "maji", "ndiyo", "hapana",
+  "rafiki", "kwaheri", "chakula", "tafadhali", "karibu",
+  "thank you", "yes", "no", "friend", "goodbye",
+  "food", "please", "welcome", "hello", "water"
+];
 
-const encouragements = {
-  correct: [
-    "Nice work!",
-    "You got it!",
-    "Great job!",
-    "Awesome answer!",
-    "That’s correct!"
-  ],
-  wrong: [
-    "Good try!",
-    "You’re learning!",
-    "Nice effort!",
-    "Keep going!",
-    "You’ve got this!"
-  ]
-};
+// ── Feedback messages ──
+const CORRECT_MSGS = [
+  "✅ Excellent! That's exactly right!",
+  "✅ Nzuri sana! (Very good!) Keep it up!",
+  "✅ You got it! Great work!",
+  "✅ Correct! You're on a roll!",
+  "✅ Kabisa! (Absolutely!) Well done!",
+  "✅ That's right! You're crushing it!",
+];
 
-const streakMessages = {
-  3: "🔥 3 in a row! You’re on a roll!",
-  5: "🌈 5 in a row! Amazing streak!",
-  10: "🏆 10 in a row! Incredible!"
-};
+const INCORRECT_MSGS = [
+  "Not quite — but that's how we learn! The answer was",
+  "Almost there! The correct answer is",
+  "No worries — keep going! The right answer was",
+  "Good try! Here's the answer to remember:",
+  "Learning moment! The correct answer is",
+];
 
-const STORAGE_KEY = "swahiliSprintProgress";
+const STREAK_MSGS = [
+  "🔥 You're on fire! {n} in a row!",
+  "⚡ Unstoppable! {n} correct answers straight!",
+  "🌟 Amazing streak — {n} and counting!",
+  "🎯 {n} in a row! You're really getting this!",
+];
 
-let questionQueue = [];
-let currentIndex = 0;
-let score = 0;
-let streak = 0;
-let longestStreak = 0;
-let sessionXP = 0;
-let answered = false;
-let missedQuestions = [];
-let reviewStarted = false;
-let sessionCompleted = false;
+// ── State ──
+let questions        = [];
+let currentIndex     = 0;
+let sessionScore     = 0;
+let sessionXP        = 0;
+let currentStreak    = 0;
+let longestStreak    = 0;
+let missedQuestions  = [];
+let answerLocked     = false;
 
-let savedProgress = loadProgress();
+// ── Persistent state (localStorage) ──
+let totalXP          = parseInt(localStorage.getItem("swahili_totalXP"))    || 0;
+let lessonsCompleted = parseInt(localStorage.getItem("swahili_lessons"))     || 0;
 
-const questionText = document.getElementById("questionText");
-const choicesEl = document.getElementById("choices");
-const feedbackEl = document.getElementById("feedback");
-const questionCountEl = document.getElementById("questionCount");
-const modeBadgeEl = document.getElementById("modeBadge");
-const progressFill = document.getElementById("progressFill");
+// ── DOM refs ──
+const questionCounter     = document.getElementById("question-counter");
+const questionPrompt      = document.getElementById("question-prompt");
+const choicesContainer    = document.getElementById("choices-container");
+const typeAnswerContainer = document.getElementById("type-answer-container");
+const typeInput           = document.getElementById("type-input");
+const submitBtn           = document.getElementById("submit-btn");
+const feedbackBox         = document.getElementById("feedback-box");
+const feedbackText        = document.getElementById("feedback-text");
+const nextBtn             = document.getElementById("next-btn");
+const progressBar         = document.getElementById("progress-bar");
+const quizContainer       = document.getElementById("quiz-container");
+const resultsScreen       = document.getElementById("results-screen");
+const playAgainBtn        = document.getElementById("play-again-btn");
 
-const scoreEl = document.getElementById("score");
-const streakEl = document.getElementById("streak");
-const sessionXPEl = document.getElementById("sessionXP");
-const totalXPEl = document.getElementById("totalXP");
+// Stats bar
+const statScore    = document.getElementById("stat-score");
+const statStreak   = document.getElementById("stat-streak");
+const statXP       = document.getElementById("stat-xp");
+const statTotalXP  = document.getElementById("stat-total-xp");
+const statLessons  = document.getElementById("stat-lessons");
 
-const quizArea = document.getElementById("quizArea");
-const resultsEl = document.getElementById("results");
+// ── Init ──
+function initSession() {
+  questions       = shuffle([...ALL_QUESTIONS]);
+  currentIndex    = 0;
+  sessionScore    = 0;
+  sessionXP       = 0;
+  currentStreak   = 0;
+  longestStreak   = 0;
+  missedQuestions = [];
+  answerLocked    = false;
 
-const finalScoreEl = document.getElementById("finalScore");
-const finalStreakEl = document.getElementById("finalStreak");
-const finalXPEl = document.getElementById("finalXP");
-const finalLessonsEl = document.getElementById("finalLessons");
-const savedXPNote = document.getElementById("savedXPNote");
-const restartBtn = document.getElementById("restartBtn");
+  quizContainer.classList.remove("hidden");
+  resultsScreen.classList.add("hidden");
+  feedbackBox.classList.add("hidden");
 
-function loadProgress() {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  updateStatsBar();
+  loadQuestion();
+}
 
-  if (!raw) {
-    return {
-      totalXP: 0,
-      lessonsCompleted: 0
-    };
+// ── Load question ──
+function loadQuestion() {
+  answerLocked = false;
+  feedbackBox.classList.add("hidden");
+  feedbackBox.classList.remove("correct-fb", "incorrect-fb");
+
+  const q = questions[currentIndex];
+
+  // Progress bar
+  const pct = (currentIndex / questions.length) * 100;
+  progressBar.style.width = pct + "%";
+
+  // Counter
+  questionCounter.textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+
+  // Prompt
+  questionPrompt.textContent = q.prompt;
+
+  // Streak celebration banner (every 3 correct in a row)
+  removeStreakBanner();
+  if (currentStreak > 0 && currentStreak % 3 === 0) {
+    showStreakBanner(currentStreak);
   }
 
-  try {
-    const parsed = JSON.parse(raw);
-    return {
-      totalXP: Number(parsed.totalXP) || 0,
-      lessonsCompleted: Number(parsed.lessonsCompleted) || 0
-    };
-  } catch (error) {
-    return {
-      totalXP: 0,
-      lessonsCompleted: 0
-    };
+  if (q.type === "mc") {
+    showMultipleChoice(q);
+  } else {
+    showTypeAnswer(q);
   }
 }
 
-function saveProgress() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(savedProgress));
-}
+// ── Multiple choice ──
+function showMultipleChoice(q) {
+  choicesContainer.classList.remove("hidden");
+  typeAnswerContainer.classList.add("hidden");
+  choicesContainer.innerHTML = "";
 
-function randomItem(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function buildSessionQueue() {
-  questionQueue = baseQuestions.map(question => ({ ...question }));
-}
-
-function getCurrentQuestion() {
-  return questionQueue[currentIndex];
-}
-
-function updateTopbar() {
-  scoreEl.textContent = `${score}/${baseQuestions.length}`;
-  streakEl.textContent = streak;
-  sessionXPEl.textContent = sessionXP;
-  totalXPEl.textContent = savedProgress.totalXP;
-}
-
-function updateProgressBar() {
-  const progress = Math.min((currentIndex / questionQueue.length) * 100, 100);
-  progressFill.style.width = `${progress}%`;
-}
-
-function showQuestion() {
-  answered = false;
-  feedbackEl.className = "feedback";
-  feedbackEl.innerHTML = "";
-
-  const currentQuestion = getCurrentQuestion();
-
-  if (!currentQuestion) {
-    finishSession();
-    return;
-  }
-
-  const visibleNumber = Math.min(currentIndex + 1, questionQueue.length);
-  questionCountEl.textContent = `Question ${visibleNumber} of ${questionQueue.length}`;
-  modeBadgeEl.textContent = modeLabels[currentQuestion.type] || "🌟 Practice Round";
-  questionText.textContent = currentQuestion.question;
-
-  choicesEl.innerHTML = "";
-
-  currentQuestion.choices.forEach(choice => {
-    const button = document.createElement("button");
-    button.className = "choice-btn";
-    button.type = "button";
-    button.textContent = choice;
-    button.addEventListener("click", () => handleAnswer(choice, button));
-    choicesEl.appendChild(button);
+  const options = buildOptions(q.answer);
+  options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "choice-btn";
+    btn.textContent = opt;
+    btn.addEventListener("click", () => handleMCAnswer(btn, opt, q.answer));
+    choicesContainer.appendChild(btn);
   });
-
-  updateTopbar();
-  updateProgressBar();
 }
 
-function handleAnswer(selectedChoice, selectedButton) {
-  if (answered) return;
-  answered = true;
+// ── Type answer ──
+function showTypeAnswer(q) {
+  choicesContainer.classList.add("hidden");
+  typeAnswerContainer.classList.remove("hidden");
+  typeInput.value = "";
+  typeInput.focus();
+}
 
-  const currentQuestion = getCurrentQuestion();
-  const buttons = document.querySelectorAll(".choice-btn");
-  const isCorrect = selectedChoice === currentQuestion.answer;
+// ── Handle MC answer ──
+function handleMCAnswer(btn, chosen, correct) {
+  if (answerLocked) return;
+  answerLocked = true;
 
-  buttons.forEach(button => {
-    button.disabled = true;
-    if (button.textContent === currentQuestion.answer) {
-      button.classList.add("correct");
-    }
-  });
+  const allBtns = choicesContainer.querySelectorAll(".choice-btn");
+  allBtns.forEach(b => b.disabled = true);
+
+  if (chosen.toLowerCase() === correct.toLowerCase()) {
+    btn.classList.add("correct");
+    handleCorrect();
+  } else {
+    btn.classList.add("incorrect");
+    // Reveal correct answer
+    allBtns.forEach(b => {
+      if (b.textContent.toLowerCase() === correct.toLowerCase()) {
+        b.classList.add("reveal");
+      }
+    });
+    handleIncorrect(correct);
+  }
+}
+
+// ── Handle type answer ──
+function handleTypeSubmit() {
+  if (answerLocked) return;
+  const q = questions[currentIndex];
+  const userAnswer = typeInput.value.trim().toLowerCase();
+  const correct    = q.answer.toLowerCase();
+
+  if (!userAnswer) return;
+  answerLocked = true;
+  submitBtn.disabled = true;
+
+  if (userAnswer === correct) {
+    typeInput.style.borderColor = "#388e3c";
+    handleCorrect();
+  } else {
+    typeInput.style.borderColor = "#c62828";
+    handleIncorrect(q.answer);
+  }
+}
+
+// ── Correct ──
+function handleCorrect() {
+  sessionScore++;
+  sessionXP += 10;
+  currentStreak++;
+  if (currentStreak > longestStreak) longestStreak = currentStreak;
+
+  updateStatsBar();
+  showFeedback(true, "");
+}
+
+// ── Incorrect ──
+function handleIncorrect(correctAnswer) {
+  currentStreak = 0;
+  missedQuestions.push(questions[currentIndex]);
+
+  updateStatsBar();
+  showFeedback(false, correctAnswer);
+}
+
+// ── Show feedback ──
+function showFeedback(isCorrect, correctAnswer) {
+  feedbackBox.classList.remove("hidden", "correct-fb", "incorrect-fb");
 
   if (isCorrect) {
-    score += 1;
-    streak += 1;
-    longestStreak = Math.max(longestStreak, streak);
-    sessionXP += 10;
-
-    let extraMessage = "";
-    if (streakMessages[streak]) {
-      extraMessage = `<br><strong>${streakMessages[streak]}</strong>`;
-    }
-
-    feedbackEl.className = "feedback correct show";
-    feedbackEl.innerHTML = `✅ ${randomItem(encouragements.correct)} <strong>${currentQuestion.answer}</strong> is right.${extraMessage}`;
+    feedbackBox.classList.add("correct-fb");
+    const msg = CORRECT_MSGS[Math.floor(Math.random() * CORRECT_MSGS.length)];
+    feedbackText.textContent = msg;
   } else {
-    selectedButton.classList.add("wrong");
-    streak = 0;
-
-    const alreadyMissed = missedQuestions.some(question => question.id === currentQuestion.id);
-    if (!alreadyMissed && currentQuestion.type !== "review") {
-      missedQuestions.push(currentQuestion);
-    }
-
-    feedbackEl.className = "feedback wrong show";
-    feedbackEl.innerHTML = `💡 ${randomItem(encouragements.wrong)} The correct answer is <strong>${currentQuestion.answer}</strong>.<br>Hint: ${currentQuestion.hint}`;
+    feedbackBox.classList.add("incorrect-fb");
+    const prefix = INCORRECT_MSGS[Math.floor(Math.random() * INCORRECT_MSGS.length)];
+    feedbackText.textContent = `${prefix}: "${correctAnswer}"`;
   }
 
-  updateTopbar();
-
-  const nextButton = document.createElement("button");
-  nextButton.className = "next-btn";
-  nextButton.type = "button";
-  nextButton.textContent = getNextButtonLabel();
-  nextButton.addEventListener("click", goToNextQuestion);
-
-  feedbackEl.appendChild(document.createElement("br"));
-  feedbackEl.appendChild(nextButton);
+  // Determine next button label
+  const isLast = currentIndex === questions.length - 1;
+  nextBtn.textContent = isLast ? "See Results 🏆" : "Next →";
 }
 
-function getNextButtonLabel() {
-  const isLastMainQuestion = currentIndex === questionQueue.length - 1 && !reviewStarted && missedQuestions.length === 0;
-  const isBeforeReview = currentIndex === questionQueue.length - 1 && !reviewStarted && missedQuestions.length > 0;
-  const isLastReviewQuestion = reviewStarted && currentIndex === questionQueue.length - 1;
+// ── Next question ──
+nextBtn.addEventListener("click", () => {
+  currentIndex++;
+  typeInput.style.borderColor = "";
+  submitBtn.disabled = false;
 
-  if (isLastMainQuestion) return "See Results";
-  if (isBeforeReview) return "Start Review Round";
-  if (isLastReviewQuestion) return "See Results";
-  return "Next Question";
-}
-
-function startReviewRound() {
-  reviewStarted = true;
-
-  const reviewQuestions = missedQuestions.map(question => ({
-    ...question,
-    type: "review"
-  }));
-
-  questionQueue = [...questionQueue, ...reviewQuestions];
-}
-
-function goToNextQuestion() {
-  const atEndOfMainRound = currentIndex === questionQueue.length - 1 && !reviewStarted;
-
-  if (atEndOfMainRound && missedQuestions.length > 0) {
-    startReviewRound();
-  }
-
-  currentIndex += 1;
-
-  if (currentIndex < questionQueue.length) {
-    showQuestion();
-  } else {
-    finishSession();
-  }
-}
-
-function finishSession() {
-  if (sessionCompleted) return;
-  sessionCompleted = true;
-
-  sessionXP += 25;
-  savedProgress.totalXP += sessionXP;
-  savedProgress.lessonsCompleted += 1;
-  saveProgress();
-
-  updateTopbar();
-  progressFill.style.width = "100%";
-
-  quizArea.style.display = "none";
-  resultsEl.classList.add("show");
-
-  finalScoreEl.textContent = `${score}/${baseQuestions.length}`;
-  finalStreakEl.textContent = longestStreak;
-  finalXPEl.textContent = sessionXP;
-  finalLessonsEl.textContent = savedProgress.lessonsCompleted;
-  savedXPNote.textContent = `Total saved XP: ${savedProgress.totalXP}`;
-}
-
-function resetSession() {
-  currentIndex = 0;
-  score = 0;
-  streak = 0;
-  longestStreak = 0;
-  sessionXP = 0;
-  answered = false;
-  missedQuestions = [];
-  reviewStarted = false;
-  sessionCompleted = false;
-
-  buildSessionQueue();
-  updateTopbar();
-  updateProgressBar();
-
-  resultsEl.classList.remove("show");
-  quizArea.style.display = "block";
-
-  showQuestion();
-}
-
-restartBtn.addEventListener("click", resetSession);
-
-buildSessionQueue();
-updateTopbar();
-showQuestion();
+  if (currentIndex 
