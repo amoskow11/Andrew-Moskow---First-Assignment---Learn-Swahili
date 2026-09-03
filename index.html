@@ -7,85 +7,59 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <div class="app-card">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-icon">🦒</div>
-          <div>
-            <h1>Swahili Sprint</h1>
-            <p>Playful beginner practice</p>
-          </div>
-        </div>
+  <div class="app">
+    <header class="topbar">
+      <h1>Swahili Sprint</h1>
+      <p class="subtitle">A playful beginner Swahili practice app</p>
+    </header>
 
-        <div class="stats">
-          <div class="stat">
-            <span class="stat-label">Score</span>
-            <span class="stat-value" id="score">0/10</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Streak</span>
-            <span class="stat-value" id="streak">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Session XP</span>
-            <span class="stat-value" id="sessionXP">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Total XP</span>
-            <span class="stat-value" id="totalXP">0</span>
-          </div>
-        </div>
-      </header>
+    <section class="stats">
+      <div class="stat-card">
+        <span class="label">Score</span>
+        <span id="score">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="label">Streak</span>
+        <span id="streak">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="label">Session XP</span>
+        <span id="sessionXP">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="label">Total XP</span>
+        <span id="totalXP">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="label">Lessons Completed</span>
+        <span id="lessonsCompleted">0</span>
+      </div>
+    </section>
 
-      <main class="content">
-        <section id="quizArea">
-          <div class="progress-wrap">
-            <div class="progress-topline">
-              <span class="badge" id="modeBadge">🌟 Classic Round</span>
-              <span class="question-count" id="questionCount">Question 1 of 10</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" id="progressFill"></div>
-            </div>
-          </div>
+    <main class="quiz-container" id="quizContainer">
+      <div class="question-meta">
+        <span id="questionCount">Question 1 of 10</span>
+        <span id="roundType" class="round-type">Classic Round</span>
+      </div>
 
-          <div class="question-card">
-            <h2 class="question-text" id="questionText"></h2>
-            <div class="choices" id="choices"></div>
-            <div class="feedback" id="feedback"></div>
-          </div>
-        </section>
+      <h2 id="questionText">Loading question...</h2>
 
-        <section class="results" id="results">
-          <div class="results-emoji">🎉</div>
-          <h2>Session Complete!</h2>
-          <p class="results-subtitle">You finished your Swahili practice round.</p>
+      <div id="choicesContainer" class="choices"></div>
 
-          <div class="results-grid">
-            <div class="result-card">
-              <h3>Final Score</h3>
-              <p id="finalScore">0/10</p>
-            </div>
-            <div class="result-card">
-              <h3>Longest Streak</h3>
-              <p id="finalStreak">0</p>
-            </div>
-            <div class="result-card">
-              <h3>Session XP</h3>
-              <p id="finalXP">0</p>
-            </div>
-            <div class="result-card">
-              <h3>Lessons Completed</h3>
-              <p id="finalLessons">0</p>
-            </div>
-          </div>
+      <div id="feedback" class="feedback"></div>
 
-          <p class="tiny-note" id="savedXPNote"></p>
-          <button class="restart-btn" id="restartBtn">Play Again</button>
-        </section>
-      </main>
-    </div>
+      <button id="nextBtn" class="next-btn hidden">Next Question</button>
+    </main>
+
+    <section id="resultsScreen" class="results hidden">
+      <h2>Session Complete 🎉</h2>
+      <p id="finalScore"></p>
+      <p id="finalLongestStreak"></p>
+      <p id="finalSessionXP"></p>
+      <p id="finalTotalXP"></p>
+      <p id="finalLessonsCompleted"></p>
+      <button id="restartBtn">Play Again</button>
+    </section>
   </div>
 
   <script src="script.js"></script>
