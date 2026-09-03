@@ -10,10 +10,10 @@
   <div class="app-container">
     <header class="top-bar">
       <h1>Swahili Skill Sprint</h1>
-      <p class="subtitle">Practice beginner Swahili one question at a time</p>
+      <p class="subtitle">Learn Swahili through fun daily practice</p>
     </header>
 
-    <main class="quiz-card">
+    <main id="quiz-screen" class="quiz-card">
       <section class="stats-section">
         <div class="stat-box">
           <span class="stat-label">Score</span>
@@ -22,6 +22,10 @@
         <div class="stat-box">
           <span class="stat-label">Streak</span>
           <span id="streak">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Longest</span>
+          <span id="longest-streak">0</span>
         </div>
         <div class="stat-box">
           <span class="stat-label">Session XP</span>
@@ -41,7 +45,7 @@
       </section>
 
       <section class="question-section">
-        <p id="question-number">Question 1 of 10</p>
+        <p id="question-number">Question 1 of 30</p>
         <h2 id="question-text">Loading question...</h2>
       </section>
 
@@ -52,23 +56,24 @@
           placeholder="Type your answer here"
           autocomplete="off"
         />
-        <button id="submit-btn">Submit Answer</button>
+        <div class="button-row">
+          <button id="submit-btn">Submit Answer</button>
+          <button id="next-btn" class="hidden">Next Question</button>
+        </div>
       </section>
 
       <section class="feedback-section">
         <p id="feedback-message"></p>
-        <button id="next-btn" class="hidden">Next Question</button>
       </section>
     </main>
 
     <section id="results-screen" class="results-card hidden">
-      <h2>Great job finishing the lesson!</h2>
-      <p><strong>Final Score:</strong> <span id="final-score">0</span>/10</p>
-      <p><strong>Longest Streak:</strong> <span id="longest-streak">0</span></p>
-      <p><strong>XP Earned:</strong> <span id="final-xp">0</span></p>
+      <h2>Lesson Complete!</h2>
+      <p><strong>Final Score:</strong> <span id="final-score">0</span></p>
+      <p><strong>Longest Streak:</strong> <span id="final-longest-streak">0</span></p>
+      <p><strong>XP Earned This Session:</strong> <span id="final-session-xp">0</span></p>
       <p><strong>Total XP:</strong> <span id="final-total-xp">0</span></p>
       <p><strong>Lessons Completed:</strong> <span id="final-lessons-completed">0</span></p>
-
       <button id="restart-btn">Play Again</button>
     </section>
   </div>
