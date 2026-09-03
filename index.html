@@ -1,223 +1,287 @@
-const questions = [
-  { question: 'What is the Swahili word for "hello"?', answer: "jambo" },
-  { question: 'What does "asante" mean in English?', answer: "thank you" },
-  { question: 'What is the Swahili word for "water"?', answer: "maji" },
-  { question: 'What does "ndiyo" mean in English?', answer: "yes" },
-  { question: 'What is the Swahili word for "no"?', answer: "hapana" },
-  { question: 'What does "rafiki" mean in English?', answer: "friend" },
-  { question: 'What is the Swahili word for "goodbye"?', answer: "kwaheri" },
-  { question: 'What does "chakula" mean in English?', answer: "food" },
-  { question: 'What is the Swahili word for "please"?', answer: "tafadhali" },
-  { question: 'What does "karibu" mean in English?', answer: "welcome" },
-  { question: 'What is the Swahili word for "book"?', answer: "kitabu" },
-  { question: 'What does "shule" mean in English?', answer: "school" },
-  { question: 'What is the Swahili word for "teacher"?', answer: "mwalimu" },
-  { question: 'What does "mtoto" mean in English?', answer: "child" },
-  { question: 'What is the Swahili word for "house"?', answer: "nyumba" },
-  { question: 'What does "mbwa" mean in English?', answer: "dog" },
-  { question: 'What is the Swahili word for "cat"?', answer: "paka" },
-  { question: 'What does "jua" mean in English?', answer: "sun" },
-  { question: 'What is the Swahili word for "moon"?', answer: "mwezi" },
-  { question: 'What does "barabara" mean in English?', answer: "road" },
-  { question: 'What is the Swahili word for "tree"?', answer: "mti" },
-  { question: 'What does "meza" mean in English?', answer: "table" },
-  { question: 'What is the Swahili word for "chair"?', answer: "kiti" },
-  { question: 'What does "dirisha" mean in English?', answer: "window" },
-  { question: 'What is the Swahili word for "door"?', answer: "mlango" },
-  { question: 'What does "soko" mean in English?', answer: "market" },
-  { question: 'What is the Swahili word for "fruit"?', answer: "tunda" },
-  { question: 'What does "samaki" mean in English?', answer: "fish" },
-  { question: 'What is the Swahili word for "milk"?', answer: "maziwa" },
-  { question: 'What does "ugali" mean in English?', answer: "cornmeal dish" }
-];
-
-const questionNumber = document.getElementById("question-number");
-const questionText = document.getElementById("question-text");
-const answerInput = document.getElementById("answer-input");
-const submitBtn = document.getElementById("submit-btn");
-const nextBtn = document.getElementById("next-btn");
-const feedbackMessage = document.getElementById("feedback-message");
-
-const scoreDisplay = document.getElementById("score");
-const streakDisplay = document.getElementById("streak");
-const longestStreakDisplay = document.getElementById("longest-streak");
-const sessionXpDisplay = document.getElementById("session-xp");
-const totalXpDisplay = document.getElementById("total-xp");
-const lessonsCompletedDisplay = document.getElementById("lessons-completed");
-
-const quizScreen = document.getElementById("quiz-screen");
-const resultsScreen = document.getElementById("results-screen");
-const finalScore = document.getElementById("final-score");
-const finalLongestStreak = document.getElementById("final-longest-streak");
-const finalSessionXp = document.getElementById("final-session-xp");
-const finalTotalXp = document.getElementById("final-total-xp");
-const finalLessonsCompleted = document.getElementById("final-lessons-completed");
-const restartBtn = document.getElementById("restart-btn");
-
-let currentQuestionIndex = 0;
-let score = 0;
-let streak = 0;
-let longestStreak = 0;
-let sessionXp = 0;
-let answerSubmitted = false;
-
-let totalXp = parseInt(localStorage.getItem("totalXp")) || 0;
-let lessonsCompleted = parseInt(localStorage.getItem("lessonsCompleted")) || 0;
-
-const correctMessages = [
-  "Great job!",
-  "Nice work!",
-  "You got it!",
-  "Excellent!",
-  "Awesome answer!",
-  "Well done!"
-];
-
-const wrongMessages = [
-  "Good try!",
-  "You're still learning!",
-  "Nice effort!",
-  "Keep going!",
-  "Mistakes help us learn!"
-];
-
-function updatePersistentDisplays() {
-  totalXpDisplay.textContent = totalXp;
-  lessonsCompletedDisplay.textContent = lessonsCompleted;
-}
-
-function updateStats() {
-  scoreDisplay.textContent = score;
-  streakDisplay.textContent = streak;
-  longestStreakDisplay.textContent = longestStreak;
-  sessionXpDisplay.textContent = sessionXp;
-  updatePersistentDisplays();
-}
-
-function getRandomMessage(messages) {
-  return messages[Math.floor(Math.random() * messages.length)];
-}
-
-function loadQuestion() {
-  const currentQuestion = questions[currentQuestionIndex];
-  questionNumber.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
-  questionText.textContent = currentQuestion.question;
-  answerInput.value = "";
-  answerInput.disabled = false;
-  submitBtn.disabled = false;
-  nextBtn.classList.add("hidden");
-  feedbackMessage.textContent = "";
-  feedbackMessage.style.color = "#374151";
-  answerSubmitted = false;
-  answerInput.focus();
-}
-
-function checkAnswer() {
-  if (answerSubmitted) return;
-
-  const userAnswer = answerInput.value.trim().toLowerCase();
-  const correctAnswer = questions[currentQuestionIndex].answer.toLowerCase();
-
-  if (userAnswer === "") {
-    feedbackMessage.textContent = "Please type an answer first.";
-    feedbackMessage.style.color = "#b45309";
-    return;
-  }
-
-  answerSubmitted = true;
-  answerInput.disabled = true;
-  submitBtn.disabled = true;
-
-  if (userAnswer === correctAnswer) {
-    score++;
-    streak++;
-    sessionXp += 10;
-
-    if (streak > longestStreak) {
-      longestStreak = streak;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Swahili Sprint</title>
+  <style>
+    * {
+      box-sizing: border-box;
     }
 
-    let message = getRandomMessage(correctMessages);
-
-    if (streak === 3) {
-      message += " 3 in a row!";
-    } else if (streak === 5) {
-      message += " 5 in a row!";
-    } else if (streak === 10) {
-      message += " 10 in a row!";
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Comic Sans MS", sans-serif;
+      background: linear-gradient(135deg, #fff4b8, #ffd6e7, #c8f7ff);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: #24324a;
     }
 
-    feedbackMessage.textContent = `${message} Correct: ${questions[currentQuestionIndex].answer}`;
-    feedbackMessage.style.color = "#15803d";
-  } else {
-    streak = 0;
-    const message = getRandomMessage(wrongMessages);
-    feedbackMessage.textContent = `${message} The correct answer is: ${questions[currentQuestionIndex].answer}`;
-    feedbackMessage.style.color = "#b91c1c";
-  }
-
-  updateStats();
-  nextBtn.classList.remove("hidden");
-}
-
-function showResults() {
-  sessionXp += 25;
-  totalXp += sessionXp;
-  lessonsCompleted += 1;
-
-  localStorage.setItem("totalXp", totalXp);
-  localStorage.setItem("lessonsCompleted", lessonsCompleted);
-
-  finalScore.textContent = `${score}/${questions.length}`;
-  finalLongestStreak.textContent = longestStreak;
-  finalSessionXp.textContent = sessionXp;
-  finalTotalXp.textContent = totalXp;
-  finalLessonsCompleted.textContent = lessonsCompleted;
-
-  updatePersistentDisplays();
-
-  quizScreen.classList.add("hidden");
-  resultsScreen.classList.remove("hidden");
-}
-
-function goToNextQuestion() {
-  currentQuestionIndex++;
-
-  if (currentQuestionIndex < questions.length) {
-    loadQuestion();
-  } else {
-    showResults();
-  }
-}
-
-function restartQuiz() {
-  currentQuestionIndex = 0;
-  score = 0;
-  streak = 0;
-  longestStreak = 0;
-  sessionXp = 0;
-  answerSubmitted = false;
-
-  resultsScreen.classList.add("hidden");
-  quizScreen.classList.remove("hidden");
-
-  updateStats();
-  loadQuestion();
-}
-
-submitBtn.addEventListener("click", checkAnswer);
-nextBtn.addEventListener("click", goToNextQuestion);
-restartBtn.addEventListener("click", restartQuiz);
-
-answerInput.addEventListener("keydown", function (event) {
-  if (event.key === "Enter") {
-    if (!answerSubmitted) {
-      checkAnswer();
-    } else {
-      goToNextQuestion();
+    .app {
+      width: 100%;
+      max-width: 760px;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 28px;
+      box-shadow: 0 18px 40px rgba(53, 74, 117, 0.18);
+      overflow: hidden;
+      border: 4px solid #ffffff;
     }
-  }
-});
 
-updateStats();
-loadQuestion();
+    .topbar {
+      background: linear-gradient(90deg, #7c5cff, #29c7ac, #ff8a5b);
+      color: white;
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      text-align: center;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+      padding: 10px 8px;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      opacity: 0.95;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .content {
+      padding: 28px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #ffe66d;
+      color: #5a4700;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 18px;
+    }
+
+    .question-count {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .question-text {
+      font-size: 1.65rem;
+      line-height: 1.35;
+      margin-bottom: 24px;
+      font-weight: 700;
+    }
+
+    .choices {
+      display: grid;
+      gap: 14px;
+    }
+
+    .choice-btn {
+      border: none;
+      border-radius: 18px;
+      padding: 16px 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      color: #24324a;
+      box-shadow: 0 8px 18px rgba(36, 50, 74, 0.08);
+    }
+
+    .choice-btn:nth-child(4n+1) { background: #dff7ff; }
+    .choice-btn:nth-child(4n+2) { background: #ffe3f1; }
+    .choice-btn:nth-child(4n+3) { background: #e8ffd9; }
+    .choice-btn:nth-child(4n+4) { background: #fff0cc; }
+
+    .choice-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(36, 50, 74, 0.12);
+    }
+
+    .choice-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.95;
+    }
+
+    .choice-btn.correct {
+      background: #b9f6ca !important;
+      border: 2px solid #20a35b;
+    }
+
+    .choice-btn.wrong {
+      background: #ffd4d4 !important;
+      border: 2px solid #d64545;
+    }
+
+    .feedback {
+      margin-top: 22px;
+      min-height: 82px;
+      border-radius: 18px;
+      padding: 16px 18px;
+      font-weight: 700;
+      display: none;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.correct {
+      background: #e8fff0;
+      color: #17663b;
+      border: 2px solid #8ce3ad;
+    }
+
+    .feedback.wrong {
+      background: #fff1f1;
+      color: #9d2f2f;
+      border: 2px solid #f2aaaa;
+    }
+
+    .next-btn, .restart-btn {
+      margin-top: 18px;
+      border: none;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(90deg, #7c5cff, #ff6fb5);
+      color: white;
+      box-shadow: 0 10px 20px rgba(124, 92, 255, 0.22);
+    }
+
+    .next-btn:hover, .restart-btn:hover {
+      opacity: 0.95;
+    }
+
+    .results {
+      display: none;
+      text-align: center;
+      padding: 10px 0 6px;
+    }
+
+    .results.show {
+      display: block;
+    }
+
+    .results h2 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #5b44d1;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin: 24px 0;
+    }
+
+    .result-card {
+      background: linear-gradient(135deg, #f4f0ff, #eefcff);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 18px rgba(36, 50, 74, 0.08);
+    }
+
+    .result-card h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      color: #6b7280;
+    }
+
+    .result-card p {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #24324a;
+    }
+
+    .tiny-note {
+      color: #6b7280;
+      font-size: 0.92rem;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .question-text {
+        font-size: 1.35rem;
+      }
+
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="stat">
+        <div class="stat-label">Score</div>
+        <div class="stat-value" id="score">0/10</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Streak</div>
+        <div class="stat-value" id="streak">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Session XP</div>
+        <div class="stat-value" id="sessionXP">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total XP</div>
+        <div class="stat-value" id="totalXP">0</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div id="quizArea">
+        <div class="badge" id="modeBadge">🌟 Classic Round</div>
+        <div class="question-count" id="questionCount">Question 1 of 10</div>
+        <div class="question-text" id="questionText"></div>
+        <div class="choices" id="choices"></div>
+        <div class="feedback" id="feedback"></div>
+      </div>
+
+      <div class="results" id="results">
+        <h2>🎉 Great job!</h2>
+        <p>You finished your Swahili practice session.</p>
+
+        <div class="results-grid">
+          <div class="result-card">
+            <h3>Final Score</h3>
+            <p id="finalScore">0/10</p>
+          </div>
+          <div class="result-card">
+            <h3>Longest Streak</h3>
+            <p id="finalStreak">0</p>
+          </div>
+          <div class="result-card">
+            <h3>Session XP</h3>
+            <p id="finalXP
