@@ -1,5 +1,6 @@
-const questions = [
+const baseQuestions = [
   {
+    id: 1,
     type: "classic",
     question: 'What is the Swahili word for "hello"?',
     choices: ["jambo", "maji", "rafiki", "hapana"],
@@ -7,6 +8,7 @@ const questions = [
     hint: "It is a common greeting."
   },
   {
+    id: 2,
     type: "classic",
     question: 'What does "asante" mean in English?',
     choices: ["please", "thank you", "friend", "yes"],
@@ -14,6 +16,7 @@ const questions = [
     hint: "You say this when someone helps you."
   },
   {
+    id: 3,
     type: "fast",
     question: 'What is the Swahili word for "water"?',
     choices: ["chakula", "maji", "karibu", "kwaheri"],
@@ -21,6 +24,7 @@ const questions = [
     hint: "You drink it."
   },
   {
+    id: 4,
     type: "fast",
     question: 'What does "ndiyo" mean in English?',
     choices: ["no", "food", "yes", "hello"],
@@ -28,6 +32,7 @@ const questions = [
     hint: "It is the positive answer."
   },
   {
+    id: 5,
     type: "streak",
     question: 'What is the Swahili word for "no"?',
     choices: ["hapana", "jambo", "tafadhali", "maji"],
@@ -35,6 +40,7 @@ const questions = [
     hint: "It is the opposite of yes."
   },
   {
+    id: 6,
     type: "streak",
     question: 'What does "rafiki" mean in English?',
     choices: ["friend", "welcome", "food", "goodbye"],
@@ -42,6 +48,7 @@ const questions = [
     hint: "A person you enjoy spending time with."
   },
   {
+    id: 7,
     type: "classic",
     question: 'What is the Swahili word for "goodbye"?',
     choices: ["kwaheri", "asante", "ndiyo", "rafiki"],
@@ -49,20 +56,23 @@ const questions = [
     hint: "You say this when leaving."
   },
   {
-    type: "review",
+    id: 8,
+    type: "classic",
     question: 'What does "chakula" mean in English?',
     choices: ["food", "water", "please", "hello"],
     answer: "food",
     hint: "You eat it."
   },
   {
-    type: "review",
+    id: 9,
+    type: "classic",
     question: 'What is the Swahili word for "please"?',
     choices: ["karibu", "tafadhali", "hapana", "jambo"],
     answer: "tafadhali",
     hint: "A polite word used when asking."
   },
   {
+    id: 10,
     type: "classic",
     question: 'What does "karibu" mean in English?',
     choices: ["thank you", "welcome", "friend", "yes"],
@@ -101,23 +111,27 @@ const streakMessages = {
   10: "🏆 10 in a row! Incredible!"
 };
 
-let currentQuestion = 0;
+const STORAGE_KEY = "swahiliSprintProgress";
+
+let questionQueue = [];
+let currentIndex = 0;
 let score = 0;
 let streak = 0;
 let longestStreak = 0;
 let sessionXP = 0;
 let answered = false;
+let missedQuestions = [];
+let reviewStarted = false;
+let sessionCompleted = false;
 
-let savedProgress = JSON.parse(localStorage.getItem("swahiliProgress")) || {
-  totalXP: 0,
-  lessonsCompleted: 0
-};
+let savedProgress = loadProgress();
 
 const questionText = document.getElementById("questionText");
 const choicesEl = document.getElementById("choices");
 const feedbackEl = document.getElementById("feedback");
 const questionCountEl = document.getElementById("questionCount");
 const modeBadgeEl = document.getElementById("modeBadge");
+const progressFill = document.getElementById("progressFill");
 
 const scoreEl = document.getElementById("score");
 const streakEl = document.getElementById("streak");
@@ -134,19 +148,56 @@ const finalLessonsEl = document.getElementById("finalLessons");
 const savedXPNote = document.getElementById("savedXPNote");
 const restartBtn = document.getElementById("restartBtn");
 
+function loadProgress() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+
+  if (!raw) {
+    return {
+      totalXP: 0,
+      lessonsCompleted: 0
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      totalXP: Number(parsed.totalXP) || 0,
+      lessonsCompleted: Number(parsed.lessonsCompleted) || 0
+    };
+  } catch (error) {
+    return {
+      totalXP: 0,
+      lessonsCompleted: 0
+    };
+  }
+}
+
+function saveProgress() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(savedProgress));
+}
+
 function randomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function buildSessionQueue() {
+  questionQueue = baseQuestions.map(question => ({ ...question }));
+}
+
+function getCurrentQuestion() {
+  return questionQueue[currentIndex];
+}
+
 function updateTopbar() {
-  scoreEl.textContent = `${score}/${questions.length}`;
+  scoreEl.textContent = `${score}/${baseQuestions.length}`;
   streakEl.textContent = streak;
   sessionXPEl.textContent = sessionXP;
   totalXPEl.textContent = savedProgress.totalXP;
 }
 
-function saveProgress() {
-  localStorage.setItem("swahiliProgress", JSON.stringify(savedProgress));
+function updateProgressBar() {
+  const progress = Math.min((currentIndex / questionQueue.length) * 100, 100);
+  progressFill.style.width = `${progress}%`;
 }
 
 function showQuestion() {
@@ -154,38 +205,51 @@ function showQuestion() {
   feedbackEl.className = "feedback";
   feedbackEl.innerHTML = "";
 
-  const q = questions[currentQuestion];
-  questionCountEl.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
-  questionText.textContent = q.question;
-  modeBadgeEl.textContent = modeLabels[q.type] || "🌟 Practice Round";
+  const currentQuestion = getCurrentQuestion();
+
+  if (!currentQuestion) {
+    finishSession();
+    return;
+  }
+
+  const visibleNumber = Math.min(currentIndex + 1, questionQueue.length);
+  questionCountEl.textContent = `Question ${visibleNumber} of ${questionQueue.length}`;
+  modeBadgeEl.textContent = modeLabels[currentQuestion.type] || "🌟 Practice Round";
+  questionText.textContent = currentQuestion.question;
 
   choicesEl.innerHTML = "";
 
-  q.choices.forEach((choice) => {
+  currentQuestion.choices.forEach(choice => {
     const button = document.createElement("button");
     button.className = "choice-btn";
+    button.type = "button";
     button.textContent = choice;
-    button.addEventListener("click", () => handleAnswer(button, choice));
+    button.addEventListener("click", () => handleAnswer(choice, button));
     choicesEl.appendChild(button);
   });
+
+  updateTopbar();
+  updateProgressBar();
 }
 
-function handleAnswer(button, selectedChoice) {
+function handleAnswer(selectedChoice, selectedButton) {
   if (answered) return;
   answered = true;
 
-  const q = questions[currentQuestion];
+  const currentQuestion = getCurrentQuestion();
   const buttons = document.querySelectorAll(".choice-btn");
-  buttons.forEach((btn) => {
-    btn.disabled = true;
+  const isCorrect = selectedChoice === currentQuestion.answer;
+
+  buttons.forEach(button => {
+    button.disabled = true;
+    if (button.textContent === currentQuestion.answer) {
+      button.classList.add("correct");
+    }
   });
 
-  const isCorrect = selectedChoice === q.answer;
-
   if (isCorrect) {
-    button.classList.add("correct");
-    score++;
-    streak++;
+    score += 1;
+    streak += 1;
     longestStreak = Math.max(longestStreak, streak);
     sessionXP += 10;
 
@@ -195,37 +259,64 @@ function handleAnswer(button, selectedChoice) {
     }
 
     feedbackEl.className = "feedback correct show";
-    feedbackEl.innerHTML = `✅ ${randomItem(encouragements.correct)} The correct answer is <strong>${q.answer}</strong>.${extraMessage}`;
+    feedbackEl.innerHTML = `✅ ${randomItem(encouragements.correct)} <strong>${currentQuestion.answer}</strong> is right.${extraMessage}`;
   } else {
-    button.classList.add("wrong");
+    selectedButton.classList.add("wrong");
     streak = 0;
 
-    buttons.forEach((btn) => {
-      if (btn.textContent === q.answer) {
-        btn.classList.add("correct");
-      }
-    });
+    const alreadyMissed = missedQuestions.some(question => question.id === currentQuestion.id);
+    if (!alreadyMissed && currentQuestion.type !== "review") {
+      missedQuestions.push(currentQuestion);
+    }
 
     feedbackEl.className = "feedback wrong show";
-    feedbackEl.innerHTML = `💡 ${randomItem(encouragements.wrong)} The correct answer is <strong>${q.answer}</strong>.<br>Hint: ${q.hint}`;
+    feedbackEl.innerHTML = `💡 ${randomItem(encouragements.wrong)} The correct answer is <strong>${currentQuestion.answer}</strong>.<br>Hint: ${currentQuestion.hint}`;
   }
 
   updateTopbar();
 
   const nextButton = document.createElement("button");
   nextButton.className = "next-btn";
-  nextButton.textContent =
-    currentQuestion === questions.length - 1 ? "See Results" : "Next Question";
+  nextButton.type = "button";
+  nextButton.textContent = getNextButtonLabel();
   nextButton.addEventListener("click", goToNextQuestion);
 
   feedbackEl.appendChild(document.createElement("br"));
   feedbackEl.appendChild(nextButton);
 }
 
-function goToNextQuestion() {
-  currentQuestion++;
+function getNextButtonLabel() {
+  const isLastMainQuestion = currentIndex === questionQueue.length - 1 && !reviewStarted && missedQuestions.length === 0;
+  const isBeforeReview = currentIndex === questionQueue.length - 1 && !reviewStarted && missedQuestions.length > 0;
+  const isLastReviewQuestion = reviewStarted && currentIndex === questionQueue.length - 1;
 
-  if (currentQuestion < questions.length) {
+  if (isLastMainQuestion) return "See Results";
+  if (isBeforeReview) return "Start Review Round";
+  if (isLastReviewQuestion) return "See Results";
+  return "Next Question";
+}
+
+function startReviewRound() {
+  reviewStarted = true;
+
+  const reviewQuestions = missedQuestions.map(question => ({
+    ...question,
+    type: "review"
+  }));
+
+  questionQueue = [...questionQueue, ...reviewQuestions];
+}
+
+function goToNextQuestion() {
+  const atEndOfMainRound = currentIndex === questionQueue.length - 1 && !reviewStarted;
+
+  if (atEndOfMainRound && missedQuestions.length > 0) {
+    startReviewRound();
+  }
+
+  currentIndex += 1;
+
+  if (currentIndex < questionQueue.length) {
     showQuestion();
   } else {
     finishSession();
@@ -233,38 +324,50 @@ function goToNextQuestion() {
 }
 
 function finishSession() {
+  if (sessionCompleted) return;
+  sessionCompleted = true;
+
   sessionXP += 25;
   savedProgress.totalXP += sessionXP;
   savedProgress.lessonsCompleted += 1;
   saveProgress();
+
   updateTopbar();
+  progressFill.style.width = "100%";
 
   quizArea.style.display = "none";
   resultsEl.classList.add("show");
 
-  finalScoreEl.textContent = `${score}/${questions.length}`;
+  finalScoreEl.textContent = `${score}/${baseQuestions.length}`;
   finalStreakEl.textContent = longestStreak;
   finalXPEl.textContent = sessionXP;
   finalLessonsEl.textContent = savedProgress.lessonsCompleted;
   savedXPNote.textContent = `Total saved XP: ${savedProgress.totalXP}`;
 }
 
-function restartGame() {
-  currentQuestion = 0;
+function resetSession() {
+  currentIndex = 0;
   score = 0;
   streak = 0;
   longestStreak = 0;
   sessionXP = 0;
   answered = false;
+  missedQuestions = [];
+  reviewStarted = false;
+  sessionCompleted = false;
+
+  buildSessionQueue();
+  updateTopbar();
+  updateProgressBar();
 
   resultsEl.classList.remove("show");
   quizArea.style.display = "block";
 
-  updateTopbar();
   showQuestion();
 }
 
-restartBtn.addEventListener("click", restartGame);
+restartBtn.addEventListener("click", resetSession);
 
+buildSessionQueue();
 updateTopbar();
 showQuestion();
